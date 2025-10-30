@@ -13,6 +13,14 @@ class PublicFoodController extends Controller
                     ->orderBy('category')
                     ->orderBy('name')
                     ->get();
+        
+        $foods->transform(function ($food) {
+            if ($food->image) {
+                $food->image_url = asset('storage/' . $food->image);
+            }
+            return $food;
+        });
+        
         return response()->json($foods);
     }
 
@@ -22,6 +30,14 @@ class PublicFoodController extends Controller
                     ->where('category', $category)
                     ->orderBy('name')
                     ->get();
+        
+        $foods->transform(function ($food) {
+            if ($food->image) {
+                $food->image_url = asset('storage/' . $food->image);
+            }
+            return $food;
+        });
+        
         return response()->json($foods);
     }
 
@@ -30,6 +46,11 @@ class PublicFoodController extends Controller
         if (!$food->is_available) {
             return response()->json(['message' => 'Food not available'], 404);
         }
+        
+        if ($food->image) {
+            $food->image_url = asset('storage/' . $food->image);
+        }
+        
         return response()->json($food);
     }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('showtimes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('movie_id')->constrained()->onDelete('cascade');
+            $table->foreignId('studio_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('cinema_hall');
             $table->date('show_date');
             $table->time('show_time');

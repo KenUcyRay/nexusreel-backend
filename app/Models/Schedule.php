@@ -4,38 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Showtime extends Model
+class Schedule extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'movie_id',
         'studio_id',
-        'cinema_hall',
         'show_date',
         'show_time',
-        'available_seats',
+        'price'
     ];
 
     protected $casts = [
         'show_date' => 'date',
         'show_time' => 'datetime:H:i',
+        'price' => 'decimal:2'
     ];
 
     public function movie()
     {
         return $this->belongsTo(Movie::class);
-    }
-
-    public function seats()
-    {
-        return $this->hasMany(Seat::class);
-    }
-
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class);
     }
 
     public function studio()

@@ -16,12 +16,12 @@ class Food extends Model
         'description',
         'price',
         'image',
-        'category',
-        'is_available'
+        'stock',
+        'is_active'
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'is_available' => 'boolean'
+        'is_active' => 'boolean',
+        'price' => 'decimal:2'
     ];
 }

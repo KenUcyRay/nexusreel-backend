@@ -13,14 +13,19 @@ return new class extends Migration
     {
         Schema::create('movies', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
+            $table->string('name');
             $table->text('description');
-            $table->string('poster_image')->nullable();
-            $table->integer('duration_minutes');
+            $table->string('image')->nullable();
+            $table->integer('duration');
             $table->string('genre');
             $table->string('rating');
-            $table->enum('status', ['now_showing', 'coming_soon'])->default('coming_soon');
-            $table->decimal('price', 10, 2);
+            $table->string('director');
+            $table->text('production_team')->nullable();
+            $table->enum('trailer_type', ['url', 'upload'])->default('url');
+            $table->text('trailer_url')->nullable();
+            $table->string('trailer_file')->nullable();
+            $table->enum('status', ['coming_soon', 'live_now'])->default('coming_soon');
+            $table->decimal('price', 10, 2)->default(0);
             $table->timestamps();
         });
     }

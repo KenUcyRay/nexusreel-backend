@@ -11,13 +11,26 @@ class Movie extends Model
 
     protected $fillable = [
         'name',
-        'genre', 
-        'duration',
+        'description',
         'image',
-        'status'
+        'duration',
+        'genre',
+        'rating',
+        'status',
+        'director',
+        'production_team',
+        'trailer_type',
+        'trailer_url',
+        'trailer_file',
+        'price'
     ];
 
     protected $casts = [
         'duration' => 'integer'
     ];
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }

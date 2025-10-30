@@ -12,80 +12,127 @@ class FoodController extends Controller
     public function index()
     {
         $foods = Food::orderBy('created_at', 'desc')->get();
-        return response()->json($foods);
+        
+        $foods->transform(function ($food) {
+            if ($food->image) {
+                $food->image_url = asset('storage/' . $food->image);
+            }
+            return $food;
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $foods
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'category' => 'nullable|in:snack,drink,combo'
+            'is_active' => 'sometimes|boolean',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048'
         ]);
-
-        $imagePath = null;
+        
+        // Ensure is_active is properly handled
+        $validated['is_active'] = $request->has('is_active') 
+            ? filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN) 
+            : true;
+        
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('foods', 'public');
+            $validated['image'] = $request->file('image')->store('foods', 'public');
         }
-
-        $food = Food::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'image' => $imagePath,
-            'category' => $request->category ?? 'snack',
-            'is_available' => $request->boolean('is_available', true)
+        
+        $food = Food::create($validated);
+        
+        if ($food->image) {
+            $food->image_url = asset('storage/' . $food->image);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $food,
+            'message' => 'Food created successfully'
         ]);
-
-        return response()->json($food, 201);
     }
 
     public function show(Food $food)
     {
-        return response()->json($food);
+        if ($food->image) {
+            $food->image_url = asset('storage/' . $food->image);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $food
+        ]);
     }
 
     public function update(Request $request, Food $food)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'category' => 'nullable|in:snack,drink,combo'
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'price' => 'sometimes|numeric|min:0',
+            'is_active' => 'sometimes|boolean',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048'
         ]);
-
-        $data = [
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'category' => $request->category ?? $food->category,
-            'is_available' => $request->boolean('is_available', $food->is_available)
-        ];
-
-        if ($request->hasFile('image')) {
-            // Delete old image
-            if ($food->image && Storage::exists('public/' . $food->image)) {
-                Storage::delete('public/' . $food->image);
-            }
-            
-            $data['image'] = $request->file('image')->store('foods', 'public');
+        
+        // Handle boolean conversion properly
+        if ($request->has('is_active')) {
+            $validated['is_active'] = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
         }
-
-        $food->update($data);
-        return response()->json($food);
+        
+        if ($request->hasFile('image')) {
+            if ($food->image) {
+                Storage::disk('public')->delete($food->image);
+            }
+            $validated['image'] = $request->file('image')->store('foods', 'public');
+        }
+        
+        $food->update($validated);
+        
+        if ($food->image) {
+            $food->image_url = asset('storage/' . $food->image);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $food,
+            'message' => 'Food updated successfully'
+        ]);
     }
 
     public function destroy(Food $food)
     {
-        // Delete image file
-        if ($food->image && Storage::exists('public/' . $food->image)) {
-            Storage::delete('public/' . $food->image);
+        if ($food->image) {
+            Storage::disk('public')->delete($food->image);
         }
-
+        
         $food->delete();
-        return response()->json(['message' => 'Food deleted successfully']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Food item deleted successfully'
+        ]);
+    }
+
+    public function toggleAvailability(Request $request, Food $food)
+    {
+        $validated = $request->validate([
+            'is_active' => 'required|boolean'
+        ]);
+        
+        $food->update([
+            'is_active' => filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN)
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $food,
+            'message' => 'Food availability updated successfully'
+        ]);
     }
 }

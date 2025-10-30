@@ -8,7 +8,14 @@ use App\Http\Controllers\PublicFoodController;
 use App\Http\Controllers\Admin\MovieController as AdminMovieController;
 use App\Http\Controllers\Admin\FoodController as AdminFoodController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\StudioController as AdminStudioController;
+use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\StudioController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,23 +39,27 @@ Route::get('/routes-check', function () {
     ]);
 });
 
-// No CSRF needed for API routes
+// Authentication routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:sanctum')->get('/user', [AuthController::class, 'user']);
+Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
 
 // Public routes
-Route::get('/movies', [PublicMovieController::class, 'index']);
-Route::get('/movies/coming-soon', [PublicMovieController::class, 'comingSoon']);
-Route::get('/movies/live-now', [PublicMovieController::class, 'liveNow']);
-Route::get('/movies/{movie}', [PublicMovieController::class, 'show']);
+Route::get('/movies', [MovieController::class, 'index']);
+Route::get('/movies/{id}', [MovieController::class, 'show']);
 
 // Public food routes
 Route::get('foods', [AdminFoodController::class, 'index']);
 Route::get('foods/{food}', [AdminFoodController::class, 'show']);
+
+// Public studio routes
+Route::get('/studios', [StudioController::class, 'index']);
+Route::get('/studios/{id}', [StudioController::class, 'show']);
+
+// Public schedule routes
+Route::get('/schedules/movie/{movieId}', [AdminScheduleController::class, 'getByMovie']);
 
 Route::get('/showtimes/{id}/seats', function ($id) {
     $seats = \App\Models\Seat::where('showtime_id', $id)->get();
@@ -74,27 +85,37 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Admin routes
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/admin/dashboard', function (Request $request) {
-            return response()->json([
-                'message' => 'Admin dashboard data',
-                'user' => $request->user(),
-                'stats' => [
-                    'total_users' => \App\Models\User::count(),
-                    'total_movies' => \App\Models\Movie::count(),
-                    'total_bookings' => \App\Models\Booking::count()
-                ]
-            ]);
-        });
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'stats']);
         
         // Movie management
-        Route::apiResource('admin/movies', AdminMovieController::class);
+        Route::apiResource('movies', AdminMovieController::class);
         
         // Food management
-        Route::apiResource('admin/foods', AdminFoodController::class);
+        Route::apiResource('foods', AdminFoodController::class);
+        Route::patch('foods/{food}/toggle-availability', [AdminFoodController::class, 'toggleAvailability']);
         
         // User management
-        Route::apiResource('admin/users', AdminUserController::class);
+        Route::apiResource('users', AdminUserController::class);
+        
+        // Studio management
+        Route::apiResource('studios', AdminStudioController::class);
+        
+        // Schedule management
+        Route::apiResource('schedules', AdminScheduleController::class);
+        Route::get('schedules-data', [AdminScheduleController::class, 'getMoviesAndStudios']);
+        
+        // Transaction management
+        Route::get('transactions/food', [TransactionController::class, 'foodTransactions']);
+        Route::get('dashboard/food-stats', [TransactionController::class, 'foodStats']);
+        Route::get('transactions/food/{id}', [TransactionController::class, 'showFoodTransaction']);
+    });
+    
+    // Studio management (public create/update/delete for admin)
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/studios', [StudioController::class, 'store']);
+        Route::put('/studios/{id}', [StudioController::class, 'update']);
+        Route::delete('/studios/{id}', [StudioController::class, 'destroy']);
     });
     
     // Owner routes

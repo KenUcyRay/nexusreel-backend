@@ -6,71 +6,76 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     public function index()
     {
         $users = User::orderBy('created_at', 'desc')->get();
-        return response()->json($users);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $users
+        ]);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:user,kasir,admin,owner'
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'phone' => 'nullable|string',
+            'role' => 'required|in:admin,user,owner,kasir'
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role
-        ]);
+        $validated['password'] = Hash::make($validated['password']);
+        $user = User::create($validated);
 
-        return response()->json($user, 201);
+        return response()->json([
+            'success' => true,
+            'data' => $user,
+            'message' => 'User created successfully'
+        ], 201);
     }
 
     public function show(User $user)
     {
-        return response()->json($user);
+        return response()->json([
+            'success' => true,
+            'data' => $user
+        ]);
     }
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:user,kasir,admin,owner'
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string',
+            'role' => 'required|in:admin,user,owner,kasir'
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role
-        ];
-
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            $validated['password'] = Hash::make($request->password);
         }
 
-        $user->update($data);
-        return response()->json($user);
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'data' => $user,
+            'message' => 'User updated successfully'
+        ]);
     }
 
     public function destroy(User $user)
     {
-        // Prevent deleting own account
-        if ($user->id === auth()->id()) {
-            return response()->json(['message' => 'Cannot delete your own account'], 403);
-        }
-
         $user->delete();
-        return response()->json(['message' => 'User deleted successfully']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully'
+        ]);
     }
 }
