@@ -35,9 +35,9 @@ class ScheduleController extends Controller
         ]);
 
         // Check for schedule conflicts
-        $conflict = Schedule::where('studio_id', $request->studio_id)
-            ->where('show_date', $request->show_date)
-            ->where('show_time', $request->show_time)
+        $conflict = Schedule::where('studio_id', '=', $request->studio_id)
+            ->where('show_date', '=', $request->show_date)
+            ->where('show_time', '=', $request->show_time)
             ->exists();
 
         if ($conflict) {
@@ -77,9 +77,9 @@ class ScheduleController extends Controller
         ]);
 
         // Check for schedule conflicts (excluding current schedule)
-        $conflict = Schedule::where('studio_id', $request->studio_id)
-            ->where('show_date', $request->show_date)
-            ->where('show_time', $request->show_time)
+        $conflict = Schedule::where('studio_id', '=', $request->studio_id)
+            ->where('show_date', '=', $request->show_date)
+            ->where('show_time', '=', $request->show_time)
             ->where('id', '!=', $schedule->id)
             ->exists();
 

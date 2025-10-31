@@ -61,8 +61,9 @@ class BookingController extends Controller
     public function show($id)
     {
         $booking = Booking::with('showtime.movie', 'seats', 'user')
-            ->where('user_id', Auth::id())
-            ->findOrFail($id);
+            ->where('user_id', '=', Auth::id())
+            ->where('id', '=', $id)
+            ->firstOrFail();
         
         return response()->json($booking);
     }

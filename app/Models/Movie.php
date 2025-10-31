@@ -29,8 +29,16 @@ class Movie extends Model
         'duration' => 'integer'
     ];
 
+    protected $appends = ['title'];
+
     public function schedules()
     {
         return $this->hasMany(Schedule::class);
+    }
+
+    // Accessor untuk konsistensi dengan frontend
+    public function getTitleAttribute()
+    {
+        return $this->name;
     }
 }

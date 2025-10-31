@@ -21,5 +21,3 @@ Route::get('/sanctum/csrf-cookie', function () {
     return response()->json(['message' => 'CSRF cookie set'])
         ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
 });
-
-require __DIR__.'/test.php';

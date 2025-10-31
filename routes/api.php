@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\StudioController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\MidtransController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -59,7 +60,14 @@ Route::get('/studios', [StudioController::class, 'index']);
 Route::get('/studios/{id}', [StudioController::class, 'show']);
 
 // Public schedule routes
+Route::get('/schedules', [ScheduleController::class, 'index']);
 Route::get('/schedules/movie/{movieId}', [AdminScheduleController::class, 'getByMovie']);
+Route::get('/schedules/{id}', [ScheduleController::class, 'show']);
+
+// Payment routes
+Route::post('/payment', [MidtransController::class, 'createTransaction']);
+Route::post('/createTransaction', [MidtransController::class, 'createTransaction']);
+Route::post('/payment/callback', [MidtransController::class, 'callback']);
 
 Route::get('/showtimes/{id}/seats', function ($id) {
     $seats = \App\Models\Seat::where('showtime_id', $id)->get();
@@ -109,6 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('transactions/food', [TransactionController::class, 'foodTransactions']);
         Route::get('dashboard/food-stats', [TransactionController::class, 'foodStats']);
         Route::get('transactions/food/{id}', [TransactionController::class, 'showFoodTransaction']);
+        Route::get('transactions/movie', [TransactionController::class, 'movieTransactions']);
+        Route::get('transactions/movie/{id}', [TransactionController::class, 'showMovieTransaction']);
     });
     
     // Studio management (public create/update/delete for admin)

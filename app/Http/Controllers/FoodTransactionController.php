@@ -38,8 +38,8 @@ class FoodTransactionController extends Controller
 
             // Validate items and calculate total
             foreach ($request->items as $item) {
-                $food = Food::where('id', $item['food_id'])
-                           ->where('is_active', true)
+                $food = Food::where('id', '=', $item['food_id'])
+                           ->where('is_active', '=', true)
                            ->first();
 
                 if (!$food) {

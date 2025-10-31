@@ -21,7 +21,7 @@ class Schedule extends Model
     protected $casts = [
         'show_date' => 'date',
         'show_time' => 'datetime:H:i',
-        'price' => 'decimal:2'
+        'price' => 'integer'
     ];
 
     public function movie()

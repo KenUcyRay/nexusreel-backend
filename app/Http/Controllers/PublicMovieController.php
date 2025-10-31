@@ -22,7 +22,8 @@ class PublicMovieController extends Controller
     public function show($id)
     {
         $movie = Movie::with(['schedules.studio'])
-            ->findOrFail($id);
+            ->where('id', $id)
+            ->firstOrFail();
             
         return response()->json([
             'success' => true,
