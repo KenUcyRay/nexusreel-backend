@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Midtrans Payment Test</title>
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-VljGXANwQHgYaDz9"></script>
+</head>
+<body>
+    <h1>Midtrans Payment Test</h1>
+    <button id="pay-button">Pay Now</button>
+
+    <script>
+        document.getElementById('pay-button').onclick = function() {
+            // Request snap token from backend
+            fetch('/api/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: 50000,
+                    customer_name: 'Test Customer',
+                    customer_email: 'test@example.com',
+                    seats: ['A1', 'A2'],
+                    ticket_count: 2,
+                    schedule_id: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.snap_token) {
+                    // Open Midtrans Snap
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: function(result) {
+                            console.log('Payment success:', result);
+                            alert('Payment successful!');
+                        },
+                        onPending: function(result) {
+                            console.log('Payment pending:', result);
+                            alert('Payment pending!');
+                        },
+                        onError: function(result) {
+                            console.log('Payment error:', result);
+                            alert('Payment failed!');
+                        },
+                        onClose: function() {
+                            console.log('Payment popup closed');
+                            alert('Payment popup closed');
+                        }
+                    });
+                } else {
+                    console.error('Failed to get snap token:', data);
+                    alert('Failed to create payment: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error: ' + error.message);
+            });
+        };
+    </script>
+</body>
+</html>
